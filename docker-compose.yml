@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  client:
+    build:
+      context: ./
+    volumes:
+      - ./src:/home/node/app/src
+      - ./static:/home/node/app/static
+      - ./vite.config.js:/home/node/app/vite.config.js
+      - ./tsconfig.json:/home/node/app/tsconfig.json
+      - ./svelte.config.js:/home/node/app/svelte.config.js
+      - ./tests:/home/node/app/tests
+      - ./playwright.config.ts:/home/node/app/playwright.config.ts
+      # - /home/node/app/node_modules
+      # - .:/home/node/app
+    ports:
+      - "5173:5173"
+    command: npm run dev
+    # command: sh -c "npm install && npm run dev"
+    # environment:
+    #   - PORT=5173
+    #   - HOST=0.0.0.0
