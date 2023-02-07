@@ -1,51 +1,43 @@
 <script lang="ts">
-  import { cardZod, type CardData } from "$lib/models";
+  import { temporaryCard } from "$lib/stores";
   import type { Card } from "$lib/trcp/client";
   import { Avatar } from "@skeletonlabs/skeleton";
   import { createEventDispatcher } from "svelte";
+  import { z } from "zod";
 
-  export let card: Card = { 
-    id: "", 
-    title: "", 
-    description : "",
+  export let card: Card = {
+    id: "",
+    title: "",
+    description: "",
     tags: [],
-    attachments: [],
     comments: [],
-   };
+  };
 
-   let newTitle: string = ""
+  let newTitle: string = "";
+
+  $: isTemporaryCardValid = z.string().min(1).safeParse(newTitle).success;
+
+  $: $temporaryCard = {
+    isValid: isTemporaryCardValid,
+    card: { id: card?.id, title: newTitle },
+  };
 
   export let isInEditMode: boolean = false;
-  // export let title: string = "";
-  // export let description: string | null = "";
-  // export let tags: string[] = [];
-  // export let attachments: Blob[] = [];
-  // export let comments: Comment[] = [];
 
   const dispatch = createEventDispatcher();
 
   const isEnter = async (event: KeyboardEvent) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      check();
-    }
-  };
-
-  export const check = () => {
-    try {
-      const newCard: CardData = cardZod.parse({ id: card?.id, title: newTitle });
-      dispatch("isCardValid", {
-        value: true,
-        card: newCard,
-      });
-    } catch (error: any) {
-      console.log(error.message);
+      if (isTemporaryCardValid) {
+        dispatch("saveCard", {
+          value: isTemporaryCardValid,
+        });
+      }
     }
   };
 </script>
 
-<!-- card p-4 space-y-4 text-center variant-glass-surface -->
-<!-- relative flex flex-col items-start p-4 mt-3 -->
 <div class="card card-hover variant-soft cursor-pointer mt-3" draggable="true">
   <header class="card-header">
     {#if card?.tags && card?.tags.length > 0}
@@ -75,12 +67,6 @@
         <div class="relative flex items-center ml-4">
           <i class="fa-solid fa-comment" />
           <span class="ml-1 leading-none">{card?.comments?.length}</span>
-        </div>
-      {/if}
-      {#if card?.attachments}
-        <div class="flex items-center ml-4">
-          <i class="fa-solid fa-paperclip" />
-          <span class="ml-1 leading-none">{card?.attachments?.length}</span>
         </div>
       {/if}
       <Avatar

@@ -1,17 +1,7 @@
 <script lang="ts">
-  import { swimLane as swimLaneStore } from "../stores";
-  import type { CardData } from "$lib/models";
   import { trpc, type Swimlane } from "$lib/trcp/client";
-  import type { RouterInputs } from "$lib/trcp/router";
+  import { temporaryCard } from "../stores";
   import Card from "./Card.svelte";
-
-  let checkCard: any;
-
-  const checkIfCardcanBeAdded = () => {
-    checkCard();
-  };
-
-  let item: RouterInputs["addCardToSwimlane"];
 
   export let boardId: string = "";
 
@@ -21,9 +11,7 @@
     cards: [],
   };
 
-  $: $swimLaneStore = swimlane;
-
-  // let { id, title, cards } = $swimLaneStore;
+  $: swimLaneInternal = swimlane;
 
   let isCardBeingAdded = false;
 
@@ -31,32 +19,27 @@
     isCardBeingAdded = !isCardBeingAdded;
   };
 
-  const addCard = async (card: CardData) => {
-    const newSwimlane = await trpc().addCardToSwimlane.mutate({
-      boardId,
-      swimlaneId: $swimLaneStore?.id ?? "",
-      card,
-    });
-    $swimLaneStore = newSwimlane;
-    // swimLaneStore.update((storeValue) => {...storeValue, cards: [...newSwimlane.cards.}] )
-    enterAddCardMode();
-    // await trpc($page).swimlaneById.query({boardId, swimlaneId: id})
+  const addCard = async () => {
+    if ($temporaryCard.isValid && $temporaryCard.card) {
+      const newSwimlane = await trpc().addCardToSwimlane.mutate({
+        boardId,
+        swimlaneId: swimLaneInternal?.id ?? "",
+        card: $temporaryCard.card,
+      });
+      if (newSwimlane !== null) {
+        swimLaneInternal = newSwimlane;
+      }
+      enterAddCardMode();
+    }
   };
-  const handleMessage = (event: CustomEvent) => {
-    addCard(event.detail.card);
-  };
-  // let mySwimlane: Element
-  // $: mySwimlane.scroll({ top: mySwimlane.scrollHeight, behavior: "smooth"})
-
-  // mySwimlane.scroll({ top: mySwimlane.scrollHeight, behavior: "smooth"})
 </script>
 
 <div class="flex flex-col flex-shrink-0 w-72">
   <div class="flex items-center flex-shrink-0 h-10 px-2">
-    <span class="block text-sm font-semibold">{$swimLaneStore?.title}</span>
+    <span class="block text-sm font-semibold">{swimLaneInternal?.title}</span>
     <span
       class="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold "
-      >{$swimLaneStore?.cards.length}</span
+      >{swimLaneInternal?.cards?.length}</span
     >
     <button
       class="btn-icon variant-filled-primary w-6 h-6 rounded ml-auto btn-base"
@@ -65,18 +48,14 @@
     </button>
   </div>
   <div id="mySwimlane" class="flex flex-col pb-2 pr-1 overflow-y-scroll">
-    {#if $swimLaneStore}
-      {#each $swimLaneStore?.cards as card}
+    {#if swimLaneInternal}
+      {#each swimLaneInternal?.cards as card}
         <Card {card} />
       {/each}
     {/if}
 
     {#if isCardBeingAdded}
-      <Card
-        on:isCardValid={handleMessage}
-        isInEditMode={isCardBeingAdded}
-        bind:check={checkCard}
-      />
+      <Card on:saveCard={addCard} isInEditMode={isCardBeingAdded} />
     {/if}
   </div>
   <div class="flex items-center flex-shrink- h-10 px-2">
@@ -89,13 +68,10 @@
         <span>Add a card</span>
       </button>
     {:else}
-      
-    
-    <button
+      <button
         class="btn variant-filled-primary bg-primary-500 w-52 text-sm h-6"
-        on:click={checkIfCardcanBeAdded}
+        on:click={addCard}
       >
-
         <span>Add a card</span>
       </button>
       <button
@@ -109,7 +85,5 @@
   </div>
 </div>
 
-<!-- markup (zero or more items) goes here -->
 <style>
-  /* your styles go here */
 </style>

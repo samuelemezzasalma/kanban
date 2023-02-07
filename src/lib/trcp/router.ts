@@ -14,7 +14,6 @@ let cardList: CardData[] = [
     description: "",
     title: 'This is the title of the card for the thing that needs to be done.',
     tags: ["Design"],
-    attachments: [],
     comments: []
   },
 ];
@@ -93,7 +92,7 @@ export const appRouter = router({
       } else {
         throw new Error("Board not found");
       }
-      return swimlane;
+      return {...swimlane};
     }),
 })
 
