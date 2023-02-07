@@ -11,7 +11,7 @@ const publicProcedure = t.procedure;
 let cardList: CardData[] = [
   {
     id: '1',
-    description: null,
+    description: "",
     title: 'This is the title of the card for the thing that needs to be done.',
     tags: ["Design"],
     attachments: [],
@@ -43,36 +43,50 @@ export const appRouter = router({
   boardById: publicProcedure
     .input(getZodIdSchema())
     .query(({ input }) => {
-      const board = findById<Board>(boards, input.id);
-      console.log(board);
-      return board;
+      // const board = findById<Board>(boards, input.id);
+      const board = boards.find((el: Board) => el.id === input.id) ?? null;
+      return {...board};
     }),
   swimlaneById: publicProcedure
     .input(z.object({ boardId: z.string(), swimlaneId: z.string() }))
     .query(({ input }) => {
       let swimlane: SwimLane | null = null;
       const board = findById<Board>(boards, input.boardId);
-      if (board !== null) {
+      if (board) {
         swimlane = findById<SwimLane>(board.swimlanes, input.swimlaneId)
       }
-      return swimlane;
+      return swimlane? {...swimlane} : null;
+    }),
+    cardById: publicProcedure
+    .input(z.object({ boardId: z.string(), swimlaneId: z.string(), cardId: z.string() }))
+    .query(({ input }) => {
+      let card: CardData | null = null;
+      const board = findById<Board>(boards, input.boardId);
+      if (board) {
+        const swimlane = findById<SwimLane>(board.swimlanes, input.swimlaneId)
+        if (swimlane) {
+          card = findById<CardData>(swimlane.cards, input.cardId)
+        }
+      }
+      return card? {...card} : null;
     }),
   addCardToSwimlane: publicProcedure
     .input(z.object({ boardId: z.string(), swimlaneId: z.string(), card: cardZod }))
     .mutation(({ input }) => {
-      let swimlane: SwimLane | null;
       // eslint-disable-next-line prefer-const
       let { boardId, swimlaneId, card } = { ...input }
       const board = findById<Board>(boards, boardId);
-      if (board !== null) {
+      let swimlane: SwimLane | null = null;
+      if (board) {
         swimlane = findById<SwimLane>(board.swimlanes, swimlaneId)
-        if (swimlane !== null) {
+        if (swimlane) {
           const id = `${Math.random()}`;
           const newCard: CardData = {
             ...card,
             id,
           };
           swimlane.cards = [...swimlane.cards, newCard]
+
         } else {
           throw new Error("Swimlane not found");
         }
@@ -83,7 +97,7 @@ export const appRouter = router({
     }),
 })
 
-function findById<T extends { id: string | null }>(array: Array<T>, id: string) {
+function findById<T extends { id?: string | null | undefined }>(array: Array<T>, id: string) {
   return array.find((el: T) => el.id === id) ?? null;
 }
 

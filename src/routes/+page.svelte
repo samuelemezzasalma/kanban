@@ -23,7 +23,6 @@
 
 	export let data: LayoutServerData | undefined;
 
-
 	const backlog = [1, 2, 3, 4, 5, 6];
 	const ready = [1, 2, 3];
 	const doing = [1, 2];
@@ -60,8 +59,8 @@
 		</button>
 	</div>
 	<div class="px-10 mt-6">
-		<h1 class="text-2xl font-bold">{data?.board?.title}</h1>
-		<h4>Kanban is based on 3 basic principles</h4>
+		<h1 class="text-2xl font-bold">{data?.board.title}</h1>
+		<!-- <h4>Kanban is based on 3 basic principles</h4>
 
 		<dl class="list-dl">
 			<div>
@@ -100,17 +99,16 @@
 					</dd>
 				</span>
 			</div>
-			<!-- ... -->
 		</dl>
 
 		<p>
 			Kanban promotes continuous collaboration and encourages active, ongoing
 			learning and improving by defining the best possible team workflow.
-		</p>
+		</p> -->
 	</div>
 	<div class="flex flex-grow px-10 mt-4 space-x-6 overflow-auto">
-		{#if data?.board?.swimlanes}
-			{#each data?.board?.swimlanes as swimlane}
+		{#if data?.board.swimlanes}
+			{#each data?.board.swimlanes as swimlane}
 				<Swimlane boardId={data?.board?.id?? ""} {swimlane} />
 			{/each}
 		{/if}
