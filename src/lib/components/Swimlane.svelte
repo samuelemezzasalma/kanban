@@ -41,10 +41,8 @@
       class="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold "
       >{swimLaneInternal?.cards?.length}</span
     >
-    <button
-      class="btn-icon variant-filled-primary w-6 h-6 rounded ml-auto btn-base"
-    >
-      <i class="fa-solid fa-plus" />
+    <button class="btn btn-icon w-6 h-6 rounded ml-auto btn-base">
+      <i class="fa-solid fa-ellipsis-vertical"></i>
     </button>
   </div>
   <div id="mySwimlane" class="flex flex-col pb-2 pr-1 overflow-y-scroll">
