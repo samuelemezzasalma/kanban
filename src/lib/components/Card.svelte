@@ -5,6 +5,21 @@
   import { createEventDispatcher } from "svelte";
   import { z } from "zod";
 
+  const months = new Map([
+    [0, `Jan`],
+    [1, `Feb`],
+    [2, `Mar`],
+    [3, `Apr`],
+    [4, `May`],
+    [5, `Jun`],
+    [6, `Jul`],
+    [7, `Aug`],
+    [8, `Sep`],
+    [9, `Oct`],
+    [10, `Nov`],
+    [11, `Dec`],
+  ])
+
   export let card: Card = {
     id: "",
     title: "",
@@ -61,7 +76,7 @@
     <div class="flex items-center w-full text-xs font-medium ">
       <div class="flex items-center">
         <i class="fa-solid fa-calendar" />
-        <span class="ml-1 leading-none">Dec 12</span>
+        <span class="ml-1 leading-none">{`${new Date().getDate()} ${months.get(new Date().getMonth())}`}</span>
       </div>
       {#if card?.comments}
         <div class="relative flex items-center ml-4">

@@ -8,7 +8,7 @@
   export let swimlane: Swimlane = {
     id: "",
     title: "",
-    cards: [],
+    cards: [],  
   };
 
   $: swimLaneInternal = swimlane;
