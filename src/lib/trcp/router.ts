@@ -1,6 +1,7 @@
-import { cardZod, type Board, type CardData, type SwimLane } from '$lib/models';
+import { cardZod, swimlaneZod, type Board, type CardData, type SwimLane } from '$lib/models';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { z } from 'zod';
+import type { Swimlane } from './client';
 import { t } from "./t";
 
 const router = t.router;
@@ -94,6 +95,22 @@ export const appRouter = router({
       }
       return {...swimlane};
     }),
+    addLaneToBoard: publicProcedure
+    .input(z.object({ boardId: z.string(), lane: swimlaneZod }))
+    .mutation(({ input }) => {
+      const { boardId, lane } = { ...input }
+      let newLane: SwimLane | null = null;
+      const board = findById<Board>(boards, boardId);
+      if (board) {
+        const id = `${Math.random()}`;
+        newLane = {
+          ...lane,
+          id,
+        };
+        board.swimlanes = [...board.swimlanes, newLane]
+      }
+      return {...board};
+    })
 })
 
 function findById<T extends { id?: string | null | undefined }>(array: Array<T>, id: string) {

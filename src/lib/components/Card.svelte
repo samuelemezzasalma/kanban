@@ -18,7 +18,7 @@
     [9, `Oct`],
     [10, `Nov`],
     [11, `Dec`],
-  ])
+  ]);
 
   export let card: Card = {
     id: "",
@@ -37,7 +37,7 @@
     card: { id: card?.id, title: newTitle },
   };
 
-  export let isInEditMode: boolean = false;
+  export let isCardInEditMode: boolean = false;
 
   const dispatch = createEventDispatcher();
 
@@ -60,7 +60,7 @@
     {/if}
   </header>
   <div class="pt-2 pb-2 pr-4 pl-4">
-    {#if isInEditMode}
+    {#if isCardInEditMode}
       <textarea
         bind:value={newTitle}
         on:keydown={isEnter}
@@ -76,7 +76,11 @@
     <div class="flex items-center w-full text-xs font-medium ">
       <div class="flex items-center">
         <i class="fa-solid fa-calendar" />
-        <span class="ml-1 leading-none">{`${new Date().getDate()} ${months.get(new Date().getMonth())}`}</span>
+        <span class="ml-1 leading-none"
+          >{`${new Date().getDate()} ${months.get(
+            new Date().getMonth()
+          )}`}</span
+        >
       </div>
       {#if card?.comments}
         <div class="relative flex items-center ml-4">
