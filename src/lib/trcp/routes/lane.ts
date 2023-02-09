@@ -9,7 +9,7 @@ const publicProcedure = t.procedure;
 
 export const laneRouter = router({
   swimlaneById: publicProcedure
-    .input(z.object({ boardId: z.string(), swimlaneId: z.string() }))
+    .input(z.object({ boardId: z.string(), swimlaneId: z.string().min(1) }))
     .query(({ input }) => {
       let swimlane: SwimLane | null = null;
       const board = findById<Board>(boards, input.boardId);
@@ -33,5 +33,20 @@ export const laneRouter = router({
         board.swimlanes = [...board.swimlanes, newLane]
       }
       return {...board};
+    }),
+    editLane: publicProcedure
+    .input(z.object({ boardId: z.string(), swimlaneId : z.string().min(1), title: z.string().min(1) }))
+    .mutation(({ input }) => {
+      const { boardId, swimlaneId, title } = { ...input }
+      let swimlane: SwimLane | null = null;
+      const board = findById<Board>(boards, boardId);
+      if (board?.swimlanes && board?.swimlanes !== null) {
+        swimlane = findById<SwimLane>(board?.swimlanes, swimlaneId)
+        if (swimlane && title) {
+          swimlane.title = title
+          // board.swimlanes = [...board.swimlanes, {...swimlane, title}]
+        }
+      }
+      return swimlane
     })
   })

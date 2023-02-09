@@ -19,6 +19,7 @@ type ArrayType<T> = T extends (infer Item)[] ? Item : T
 export type SwimlaneByIdInput = RouterInputs['lanes']['swimlaneById'];
 export type Swimlane = RouterOutputs['lanes']['swimlaneById'];
 export type AddCardToSwimlaneInput = RouterInputs['cards']['addCardToSwimlane'];
+export type EditLaneInput = RouterInputs['lanes']['editLane']
 
 /* BOARD */
 export type BoardByIdInput = RouterInputs['boards']['boardById'];

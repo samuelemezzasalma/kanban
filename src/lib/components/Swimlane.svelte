@@ -1,9 +1,12 @@
 <script lang="ts">
   import { trpc, type Swimlane } from "$lib/trcp/client";
-    import { createEventDispatcher } from "svelte";
-    import { z } from "zod";
+  import { createEventDispatcher } from "svelte";
+  import { z } from "zod";
   import { temporaryCard, temporaryLane } from "../stores";
   import Card from "./Card.svelte";
+  import { focusTrap } from "@skeletonlabs/skeleton";
+
+  /* INITIALIZING */
 
   export let boardId: string = "";
 
@@ -17,33 +20,66 @@
 
   export let isLaneInAddingMode: boolean = false;
 
+  let isLaneInEditMode: boolean = false;
+
+  let isCardBeingAdded = false;
+
   $: swimLaneInternal = swimlane;
 
   let newTitle: string = "";
+
+  let isFocused = false;
+
+  /* REACTIVITY */
 
   $: isTemporaryLaneValid = z.string().min(1).safeParse(newTitle).success;
 
   $: $temporaryLane = {
     isValid: isTemporaryLaneValid,
-    lane: { id: swimLaneInternal?.id, title: newTitle, cards: [] },
+    lane: {
+      id: swimLaneInternal?.id ?? "",
+      title: newTitle,
+      cards: swimLaneInternal?.cards? [...swimLaneInternal?.cards] : [],
+    },
   };
+
+  $: isLaneInEditMode = isFocused;
+
+  /* VALIDATIONS */
 
   const isEnter = async (event: KeyboardEvent) => {
     if (event.key === "Enter") {
       event.preventDefault();
       if (isTemporaryLaneValid) {
-        dispatch("saveLane", {
-          value: isTemporaryLaneValid,
-        });
+        if (isLaneInAddingMode) {
+          dispatch("saveLane", {
+            value: isTemporaryLaneValid,
+          });
+        } else {
+          changeLane();
+        }
       }
     }
   };
 
-  let isCardBeingAdded = false;
+  /* UI */
 
   const enterAddCardMode = () => {
     isCardBeingAdded = !isCardBeingAdded;
   };
+
+  const enterEditLaneMode = () => {
+    isLaneInEditMode = !isLaneInEditMode;
+  };
+
+  const onFocus = () => (isFocused = true);
+  const onBlur = () => (isFocused = false);
+
+  function init(el: HTMLElement) {
+    el.focus();
+  }
+
+  /* API */
 
   const addCard = async () => {
     if ($temporaryCard.isValid && $temporaryCard.card) {
@@ -58,20 +94,43 @@
       enterAddCardMode();
     }
   };
-</script>
 
+  const changeLane = async () => {
+    if ($temporaryLane.isValid && $temporaryLane.lane) {
+      const newLane = await trpc().lanes.editLane.mutate({
+        boardId: boardId,
+        swimlaneId: $temporaryLane.lane.id ?? "",
+        title: $temporaryLane.lane.title,
+      });
+      if (newLane && newLane !== null) {
+        swimLaneInternal = newLane;
+      }
+      enterEditLaneMode()
+    }
+  };
+</script>
 
 <div
   class="flex flex-col !w-full !max-h-full relative card !bg-transparent p-2 "
 >
-  <!-- class="flex flex-col w-72 card !bg-transparent p-2 max-h-full" -->
-  <!-- dark variant-glass -->
+  <!-- HEADER -->
   <div class="flex items-center flex-shrink-0 h-10 px-2">
-    {#if isLaneInAddingMode}
-      <input bind:value={newTitle}
-      on:keydown={isEnter} placeholder="Enter lane title..." class="input" />
+    {#if isLaneInAddingMode || isLaneInEditMode}
+      <input
+        bind:value={newTitle}
+        on:keydown={isEnter}
+        on:focus={onFocus}
+        on:blur={onBlur}
+        use:init
+        placeholder="Enter lane title..."
+        class="input"
+      />
     {:else}
-      <span class="block text-sm font-semibold">{swimLaneInternal?.title}</span>
+      <button
+        class="btn btn-sm variant-glass-primary"
+        on:click={enterEditLaneMode}>{swimLaneInternal?.title}</button
+      >
+      <!-- <span class="block text-sm font-semibold">{swimLaneInternal?.title}</span> -->
       <span
         class="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold "
         >{swimLaneInternal?.cards?.length}</span
@@ -81,17 +140,20 @@
       </button>
     {/if}
   </div>
+
+  <!-- CARDS -->
   <div class="flex flex-col pb-2 pr-1 overflow-y-scroll">
     {#if swimLaneInternal}
       {#each swimLaneInternal?.cards as card}
         <Card {card} />
       {/each}
     {/if}
-
     {#if isCardBeingAdded}
       <Card on:saveCard={addCard} isCardInEditMode={isCardBeingAdded} />
     {/if}
   </div>
+
+  <!-- BUTTONS -->
   {#if !isLaneInAddingMode}
     <div class="flex items-center flex-shrink- h-10 px-2">
       {#if !isCardBeingAdded}
@@ -145,7 +207,6 @@
       </button>
     {/if} -->
 <style>
-  
   /* .dark.card {
     --tw-ring-color: rgb(250 250 250 / 0.9) !important;
   } */
