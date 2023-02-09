@@ -8,7 +8,6 @@ type SuperJsonTransformer = {
   deserialize<T = unknown>(payload: SuperJSONResult): T;
 }
 
-
 type DataTransformer = {
   serialize(object: any): string;
   deserialize(object: string): any;

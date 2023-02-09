@@ -3,7 +3,7 @@
   import { trpc, type Board } from "$lib/trcp/client";
   import Swimlane from "./Swimlane.svelte";
 
-  export let board: Board;
+  export let board: Board | undefined;
 
   $: boardInternal = board;
 
@@ -16,7 +16,7 @@
   const addLane = async () => {
     if ($temporaryLane.isValid && $temporaryLane.lane) {
       if (board && board.id && board.id !== null) {
-        const newBoard = await trpc().addLaneToBoard.mutate({
+        const newBoard = await trpc().lanes.addLaneToBoard.mutate({
           boardId: board?.id,
           lane: $temporaryLane.lane,
         });

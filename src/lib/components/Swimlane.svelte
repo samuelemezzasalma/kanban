@@ -47,7 +47,7 @@
 
   const addCard = async () => {
     if ($temporaryCard.isValid && $temporaryCard.card) {
-      const newSwimlane = await trpc().addCardToSwimlane.mutate({
+      const newSwimlane = await trpc().cards.addCardToSwimlane.mutate({
         boardId,
         swimlaneId: swimLaneInternal?.id ?? "",
         card: $temporaryCard.card,

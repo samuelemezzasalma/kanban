@@ -16,17 +16,17 @@ export function trpc(init?: TRPCClientInit) {
 type ArrayType<T> = T extends (infer Item)[] ? Item : T
 
 /* SWIMLANE */
-export type SwimlaneByIdInput = RouterInputs['swimlaneById'];
-export type Swimlane = RouterOutputs['swimlaneById'];
-export type AddCardToSwimlaneInput = RouterInputs['addCardToSwimlane'];
+export type SwimlaneByIdInput = RouterInputs['lanes']['swimlaneById'];
+export type Swimlane = RouterOutputs['lanes']['swimlaneById'];
+export type AddCardToSwimlaneInput = RouterInputs['cards']['addCardToSwimlane'];
 
 /* BOARD */
-export type BoardByIdInput = RouterInputs['boardById'];
-export type Board = RouterOutputs['boardById'];
+export type BoardByIdInput = RouterInputs['boards']['boardById'];
+export type Board = RouterOutputs['boards']['boardById'];
 
 /* CARD */
-export type CardByIdInput = RouterInputs['cardById'];
-export type Card = RouterOutputs['cardById'];
+export type CardByIdInput = RouterInputs['cards']['cardById'];
+export type Card = RouterOutputs['cards']['cardById'];
 
 // export type SwimlaneByIdInput = RouterInput['swimlaneById'];
 // export type SwimlaneByIdOutput = RouterOutput['swimlaneById'];
