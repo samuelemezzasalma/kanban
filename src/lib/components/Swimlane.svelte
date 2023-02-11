@@ -4,7 +4,7 @@
   import { z } from "zod";
   import { temporaryCard, temporaryLane } from "../stores";
   import Card from "./Card.svelte";
-  import { focusTrap } from "@skeletonlabs/skeleton";
+  import Input from "./elements/Input.svelte";
 
   /* INITIALIZING */
 
@@ -28,7 +28,7 @@
 
   let newTitle: string = "";
 
-  let isFocused = false;
+  let isFocused: boolean = false;
 
   /* REACTIVITY */
 
@@ -39,9 +39,11 @@
     lane: {
       id: swimLaneInternal?.id ?? "",
       title: newTitle,
-      cards: swimLaneInternal?.cards? [...swimLaneInternal?.cards] : [],
+      cards: swimLaneInternal?.cards ? [...swimLaneInternal?.cards] : [],
     },
   };
+
+  $: console.log(isFocused);
 
   $: isLaneInEditMode = isFocused;
 
@@ -72,12 +74,6 @@
     isLaneInEditMode = !isLaneInEditMode;
   };
 
-  const onFocus = () => (isFocused = true);
-  const onBlur = () => (isFocused = false);
-
-  function init(el: HTMLElement) {
-    el.focus();
-  }
 
   /* API */
 
@@ -105,7 +101,7 @@
       if (newLane && newLane !== null) {
         swimLaneInternal = newLane;
       }
-      enterEditLaneMode()
+      enterEditLaneMode();
     }
   };
 </script>
@@ -116,14 +112,11 @@
   <!-- HEADER -->
   <div class="flex items-center flex-shrink-0 h-10 px-2">
     {#if isLaneInAddingMode || isLaneInEditMode}
-      <input
+      <Input
+        clazz={"input"}
+        placeholder={"Enter lane title..."}
         bind:value={newTitle}
-        on:keydown={isEnter}
-        on:focus={onFocus}
-        on:blur={onBlur}
-        use:init
-        placeholder="Enter lane title..."
-        class="input"
+        bind:isFocused={isFocused}
       />
     {:else}
       <button
