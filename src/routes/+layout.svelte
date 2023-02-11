@@ -35,24 +35,6 @@
 				>
 					<div class="text-sm lg:flex-grow">
 						<a
-							href="#responsive-header"
-							class="block mt-4 lg:inline-block lg:mt-0 te mr-4"
-						>
-							Docs
-						</a>
-						<a
-							href="#responsive-header"
-							class="block mt-4 lg:inline-block lg:mt-0  mr-4"
-						>
-							Examples
-						</a>
-						<a
-							href="#responsive-header"
-							class="block mt-4 lg:inline-block lg:mt-0 "
-						>
-							Blog
-						</a>
-						<a
 						href="#"
 						class="inline-block text-sm px-4 py-2 leading-none border rounded  hover:border-transparent  mt-4 lg:mt-0"
 						>Login</a
