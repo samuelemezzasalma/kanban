@@ -4,6 +4,7 @@
   import { Avatar } from "@skeletonlabs/skeleton";
   import { createEventDispatcher } from "svelte";
   import { z } from "zod";
+  import Textarea from "./elements/Textarea.svelte";
 
   const months = new Map([
     [0, `Jan`],
@@ -20,6 +21,8 @@
     [11, `Dec`],
   ]);
 
+  const dispatch = createEventDispatcher();
+
   export let card: Card = {
     id: "",
     title: "",
@@ -30,6 +33,10 @@
 
   let newTitle: string = "";
 
+  export let isCardInEditMode: boolean = false;
+
+  let isFocused: boolean = true;
+
   $: isTemporaryCardValid = z.string().min(1).safeParse(newTitle).success;
 
   $: $temporaryCard = {
@@ -37,20 +44,19 @@
     card: { id: card?.id, title: newTitle },
   };
 
-  export let isCardInEditMode: boolean = false;
-
-  const dispatch = createEventDispatcher();
-
-  const isEnter = async (event: KeyboardEvent) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (isTemporaryCardValid) {
-        dispatch("saveCard", {
-          value: isTemporaryCardValid,
-        });
+  const trySaveCard = () => {
+    if (isTemporaryCardValid) {
+      dispatch("saveCard", {
+        value: isTemporaryCardValid,
+      });
+    } else {
+      if (!isFocused) {
+        dispatch("exitAddCard", {value: isTemporaryCardValid,})
       }
     }
   };
+
+  $: if (!isFocused) {trySaveCard()}
 </script>
 
 <div class="card card-hover variant-soft cursor-pointer mt-3" draggable="true">
@@ -61,12 +67,13 @@
   </header>
   <div class="pt-2 pb-2 pr-4 pl-4">
     {#if isCardInEditMode}
-      <textarea
+      <Textarea
+        clazz={"mt-1 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"}
+        placeholder={"Enter a title for this card…"}
+        rows={3}
         bind:value={newTitle}
-        on:keydown={isEnter}
-        placeholder="Enter a title for this card…"
-        class="mt-1 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
-        rows="3"
+        bind:isFocused
+        on:onEnter={trySaveCard}
       />
     {:else}
       <h4>{card?.title}</h4>

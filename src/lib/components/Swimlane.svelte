@@ -28,7 +28,9 @@
 
   let newTitle: string = "";
 
-  let isFocused: boolean = false;
+  let isInputFocused: boolean = false;
+  
+  let isCardFocused: boolean = false;
 
   /* REACTIVITY */
 
@@ -43,16 +45,12 @@
     },
   };
 
-  $: console.log(isFocused);
-
-  $: isLaneInEditMode = isFocused;
+  // $: isLaneInEditMode = isInputFocused; 
 
   /* VALIDATIONS */
 
-  const isEnter = async (event: KeyboardEvent) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (isTemporaryLaneValid) {
+  const trySaveLane = () => {
+    if (isTemporaryLaneValid) {
         if (isLaneInAddingMode) {
           dispatch("saveLane", {
             value: isTemporaryLaneValid,
@@ -60,9 +58,14 @@
         } else {
           changeLane();
         }
+      } else {
+      if (!isInputFocused) {
+        dispatch("exitAddLane", {value: isTemporaryLaneValid,})
       }
     }
   };
+
+  $: if (!isInputFocused) {trySaveLane()}
 
   /* UI */
 
@@ -116,7 +119,8 @@
         clazz={"input"}
         placeholder={"Enter lane title..."}
         bind:value={newTitle}
-        bind:isFocused={isFocused}
+        bind:isFocused={isInputFocused}
+        on:onEnter={trySaveLane}
       />
     {:else}
       <button
@@ -142,7 +146,8 @@
       {/each}
     {/if}
     {#if isCardBeingAdded}
-      <Card on:saveCard={addCard} isCardInEditMode={isCardBeingAdded} />
+      <Card on:saveCard={addCard} isCardInEditMode={isCardBeingAdded} on:exitAddCard={enterAddCardMode}
+       />
     {/if}
   </div>
 

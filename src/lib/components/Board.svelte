@@ -61,6 +61,7 @@
           boardId={boardInternal?.id ?? ""}
           swimlane={{ title: "", cards: [] }}
           on:saveLane={addLane}
+          on:exitAddLane={enterSwimlaneMode}
         />
         <div class="flex items-center flex-shrink- h-10 px-2">
           <button

@@ -1,4 +1,10 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
+    import { isEnter, type onEnterType } from "./utils";
+
+
+
+  const onEnterDispatch = createEventDispatcher<{onEnter: onEnterType}>();
   export let clazz: string = "";
   export let placeholder: string = "";
   // export const type: string = "";
@@ -8,13 +14,16 @@
   const onFocus = () => (isFocused = true);
   const onBlur = () => (isFocused = false);
 
-  function init(el: HTMLElement) {
+  function init(el: HTMLInputElement) {
     onFocus();
     el.focus();
   }
 
   export let initValue: string = ""
   export let value: string = initValue;
+
+  export let onEnter: boolean = false;
+
   
 
 </script>
@@ -24,6 +33,7 @@
   use:init
   on:focus={onFocus}
   on:blur={onBlur}
+  on:keydown={(e) => isEnter(onEnterDispatch, e)}
   id=""
   class={clazz}
   placeholder={placeholder}
