@@ -5,6 +5,8 @@
   import { temporaryCard, temporaryLane } from "../stores";
   import Card from "./Card.svelte";
   import Input from "./elements/Input.svelte";
+  import { dndzone } from 'svelte-dnd-action';
+  import {flip} from 'svelte/animate';
 
   /* INITIALIZING */
 
@@ -15,6 +17,8 @@
     title: "",
     cards: [],
   };
+
+  const flipDurationMs = 150;
 
   const dispatch = createEventDispatcher();
 
@@ -44,6 +48,22 @@
       cards: swimLaneInternal?.cards ? [...swimLaneInternal?.cards] : [],
     },
   };
+
+  function handleDndConsiderCards(e: CustomEvent) {
+    if (swimLaneInternal !== null) {
+      const {cards, title, id} = swimLaneInternal;
+      swimLaneInternal = {id, title, cards: e.detail.items}
+    }
+  }
+  function handleDndFinalizeCards(e: CustomEvent) {
+    console.log(e.detail.items);
+    if (swimLaneInternal !== null) {
+      console.log(swimLaneInternal);
+      const {cards, title, id} = swimLaneInternal;
+      swimLaneInternal = {id, title, cards: e.detail.items}
+      
+    }
+  }
 
   // $: isLaneInEditMode = isInputFocused; 
 
@@ -139,10 +159,13 @@
   </div>
 
   <!-- CARDS -->
-  <div class="flex flex-col pb-2 pr-1 overflow-y-scroll">
+  <div class="flex flex-col pb-2 pr-1 overflow-y-scroll" use:dndzone={{items:swimLaneInternal?.cards??[], flipDurationMs,type:'card' , zoneTabIndex: 1}} on:consider={handleDndConsiderCards} 
+ on:finalize={handleDndFinalizeCards} >
     {#if swimLaneInternal}
-      {#each swimLaneInternal?.cards as card}
+      {#each swimLaneInternal?.cards as card (card.id)}
+      <div animate:flip={{duration: flipDurationMs}}>
         <Card {card} />
+      </div>
       {/each}
     {/if}
     {#if isCardBeingAdded}

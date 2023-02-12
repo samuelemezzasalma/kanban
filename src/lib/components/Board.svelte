@@ -2,6 +2,9 @@
   import { temporaryLane } from "$lib/stores";
   import { trpc, type Board } from "$lib/trcp/client";
   import Swimlane from "./Swimlane.svelte";
+  import { dndzone,  } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
+    import type { DndEvent, Item } from "$lib/utils/general";
 
   export let board: Board | undefined;
 
@@ -9,9 +12,24 @@
 
   let isLaneBeingAdded = false;
 
+  const flipDurationMs = 300;
+
   const enterSwimlaneMode = () => {
     isLaneBeingAdded = !isLaneBeingAdded;
   };
+
+  const handleDndConsiderColumns= (e: CustomEvent) => {
+    console.log(e.detail.items);
+    if (boardInternal) {
+      boardInternal.swimlanes = e.detail.items;
+    }
+  }
+  const handleDndFinalizeColumns= (e: CustomEvent) => {
+    console.log(e.detail.items);
+    if (boardInternal) {
+      boardInternal.swimlanes = e.detail.items;
+    }
+  }
 
   const addLane = async () => {
     if ($temporaryLane.isValid && $temporaryLane.lane) {
@@ -25,7 +43,7 @@
           newBoard !== null &&
           boardInternal?.swimlanes
         ) {
-          console.log(newBoard)
+          console.log(newBoard);
           boardInternal = newBoard;
         }
         enterSwimlaneMode();
@@ -42,11 +60,21 @@
 
     <!-- <h2 class="text-l font-bold">{data?.board.title}</h2> -->
   </div>
-  <div class="flex flex-grow px-10 mt-2 space-x-6 overflow-auto">
+  <div
+    class="flex flex-grow px-10 mt-2 space-x-6 overflow-auto"
+    use:dndzone="{{
+      items: boardInternal?.swimlanes ?? [],
+      flipDurationMs,
+      type: "lane",
+    }}"
+    on:consider="{handleDndConsiderColumns}"
+    on:finalize="{handleDndFinalizeColumns}"
+  >
     {#if boardInternal?.swimlanes}
-      {#each boardInternal?.swimlanes as swimlane}
+      {#each boardInternal?.swimlanes as swimlane, idx (swimlane.id)}
         <div
           class="box-border inline-block h-full align-top whitespace-no-wrap w-72"
+          animate:flip={{ duration: flipDurationMs }}
         >
           <Swimlane boardId={boardInternal?.id ?? ""} {swimlane} />
         </div>
