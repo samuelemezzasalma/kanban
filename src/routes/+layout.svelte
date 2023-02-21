@@ -40,6 +40,13 @@
 						>Login</a
 					>
 					</div>
+					<div class="text-sm lg:flex-grow">
+						<a
+						href="/kanban-manual"
+						class="inline-block text-sm px-4 py-2 leading-none border rounded  hover:border-transparent  mt-4 lg:mt-0"
+						>Kanban</a
+					>
+					</div>
 					
 				</div>
 			</nav>

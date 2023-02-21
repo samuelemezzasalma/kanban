@@ -11,10 +11,12 @@ export const laneRouter = router({
   swimlaneById: publicProcedure
     .input(z.object({ boardId: z.string(), swimlaneId: z.string().min(1) }))
     .query(({ input }) => {
-      let swimlane: SwimLane | null = null;
-      const board = findById<Board>(boards, input.boardId);
+      const { boardId, swimlaneId } = { ...input }
+      let swimlane: SwimLane | undefined;
+      const board = findById<Board>(boards, boardId);
       if (board) {
-        swimlane = findById<SwimLane>(board.swimlanes, input.swimlaneId)
+        swimlane = board.swimlanes.has(swimlaneId)? board.swimlanes.get(swimlaneId): undefined;
+        // swimlane = findById<SwimLane>(board.swimlanes, input.swimlaneId)
       }
       return swimlane? {...swimlane} : null;
     }),
@@ -28,9 +30,10 @@ export const laneRouter = router({
         const id = `${Math.random()}`;
         newLane = {
           ...lane,
+          board_id: board.id?? null,
           id,
         };
-        board.swimlanes = [...board.swimlanes, newLane]
+        board.swimlanes.set(id, newLane)
       }
       return {...board};
     }),
@@ -38,10 +41,11 @@ export const laneRouter = router({
     .input(z.object({ boardId: z.string(), swimlaneId : z.string().min(1), title: z.string().min(1) }))
     .mutation(({ input }) => {
       const { boardId, swimlaneId, title } = { ...input }
-      let swimlane: SwimLane | null = null;
+      let swimlane: SwimLane | null | undefined = null;
       const board = findById<Board>(boards, boardId);
       if (board?.swimlanes && board?.swimlanes !== null) {
-        swimlane = findById<SwimLane>(board?.swimlanes, swimlaneId)
+        swimlane = board.swimlanes.has(swimlaneId)? board.swimlanes.get(swimlaneId): undefined;
+        // swimlane = findById<SwimLane>(board?.swimlanes, swimlaneId)
         if (swimlane && title) {
           swimlane.title = title
           // board.swimlanes = [...board.swimlanes, {...swimlane, title}]

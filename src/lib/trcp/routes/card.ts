@@ -11,39 +11,39 @@ export const cardRouter = router({
   cardById: publicProcedure
     .input(z.object({ boardId: z.string(), swimlaneId: z.string(), cardId: z.string() }))
     .query(({ input }) => {
-      let card: CardData | null = null;
-      const board = findById<Board>(boards, input.boardId);
+      const { boardId, cardId, swimlaneId } = input
+      let card: CardData | null | undefined = null;
+      const board = findById<Board>(boards, boardId);
       if (board) {
-        const swimlane = findById<SwimLane>(board.swimlanes, input.swimlaneId)
+        const swimlane = board.swimlanes.has(swimlaneId) ? board.swimlanes.get(swimlaneId) : undefined;
         if (swimlane) {
-          card = findById<CardData>(swimlane.cards, input.cardId)
+          card = swimlane.cards.has(cardId)? swimlane.cards.get(cardId) : undefined
         }
       }
-      return card? {...card} : null;
+      return card ? { ...card } : null;
     }),
-    addCardToSwimlane: publicProcedure
+  addCardToSwimlane: publicProcedure
     .input(z.object({ boardId: z.string(), swimlaneId: z.string(), card: cardZod }))
     .mutation(({ input }) => {
-      // eslint-disable-next-line prefer-const
-      let { boardId, swimlaneId, card } = { ...input }
+      const { boardId, swimlaneId, card } = input
       const board = findById<Board>(boards, boardId);
-      let swimlane: SwimLane | null = null;
+      let swimlane: SwimLane | null | undefined = null;
       if (board) {
-        swimlane = findById<SwimLane>(board.swimlanes, swimlaneId)
+        swimlane = board.swimlanes.has(swimlaneId) ? board.swimlanes.get(swimlaneId) : undefined;
         if (swimlane) {
           const id = `${Math.random()}`;
-          const newCard: CardData = {
+          swimlane.cards.set(id, {
             ...card,
+            order: swimlane.cards.size + 1,
+            lane_id: swimlane.id?? null,
             id,
-          };
-          swimlane.cards = [...swimlane.cards, newCard]
-
+          })
         } else {
           throw new Error("Swimlane not found");
         }
       } else {
         throw new Error("Board not found");
       }
-      return {...swimlane};
+      return { ...swimlane };
     }),
-  })
+})

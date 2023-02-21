@@ -2,6 +2,8 @@
   import { temporaryLane } from "$lib/stores";
   import { trpc, type Board } from "$lib/trcp/client";
   import Swimlane from "./Swimlane.svelte";
+  import { flip } from "svelte/animate";
+  import { send, receive } from "../utils/transitions";
 
   export let board: Board | undefined;
 
@@ -25,7 +27,7 @@
           newBoard !== null &&
           boardInternal?.swimlanes
         ) {
-          console.log(newBoard)
+          console.log(newBoard);
           boardInternal = newBoard;
         }
         enterSwimlaneMode();
@@ -44,11 +46,11 @@
   </div>
   <div class="flex flex-grow px-10 mt-2 space-x-6 overflow-auto">
     {#if boardInternal?.swimlanes}
-      {#each boardInternal?.swimlanes as swimlane}
+      {#each [...boardInternal?.swimlanes.values()] as swimlane, laneIndex (swimlane)}
         <div
           class="box-border inline-block h-full align-top whitespace-no-wrap w-72"
         >
-          <Swimlane boardId={boardInternal?.id ?? ""} {swimlane} />
+          <Swimlane {laneIndex} boardId={boardInternal?.id ?? ""} {swimlane} />
         </div>
       {/each}
     {/if}
@@ -59,7 +61,11 @@
         <Swimlane
           isLaneInAddingMode={isLaneBeingAdded}
           boardId={boardInternal?.id ?? ""}
-          swimlane={{ title: "", cards: [] }}
+          swimlane={{
+            title: "",
+            cards: new Map([]),
+            board_id: boardInternal?.id ?? null,
+          }}
           on:saveLane={addLane}
           on:exitAddLane={enterSwimlaneMode}
         />

@@ -1,10 +1,13 @@
 <script lang="ts">
+  import type { CardData } from "$lib/models";
   import { trpc, type Swimlane } from "$lib/trcp/client";
   import { createEventDispatcher } from "svelte";
   import { z } from "zod";
   import { temporaryCard, temporaryLane } from "../stores";
   import Card from "./Card.svelte";
   import Input from "./elements/Input.svelte";
+  import { flip } from "svelte/animate";
+  import { send, receive } from "../utils/transitions";
 
   /* INITIALIZING */
 
@@ -13,7 +16,8 @@
   export let swimlane: Swimlane = {
     id: "",
     title: "",
-    cards: [],
+    cards: new Map<string, CardData>(),
+    board_id: null,
   };
 
   const dispatch = createEventDispatcher();
@@ -24,13 +28,17 @@
 
   let isCardBeingAdded = false;
 
+  let swimlaneInternal: Swimlane = null;
+
   $: swimLaneInternal = swimlane;
 
   let newTitle: string = "";
 
   let isInputFocused: boolean = false;
-  
+
   let isCardFocused: boolean = false;
+
+  export let laneIndex: number | undefined = undefined;
 
   /* REACTIVITY */
 
@@ -41,31 +49,36 @@
     lane: {
       id: swimLaneInternal?.id ?? "",
       title: newTitle,
-      cards: swimLaneInternal?.cards ? [...swimLaneInternal?.cards] : [],
+      board_id: swimLaneInternal?.board_id ?? null,
+      cards: swimLaneInternal?.cards
+        ? new Map([...swimLaneInternal?.cards])
+        : new Map<string, CardData>(),
     },
   };
 
-  // $: isLaneInEditMode = isInputFocused; 
+  // $: isLaneInEditMode = isInputFocused;
 
   /* VALIDATIONS */
 
   const trySaveLane = () => {
     if (isTemporaryLaneValid) {
-        if (isLaneInAddingMode) {
-          dispatch("saveLane", {
-            value: isTemporaryLaneValid,
-          });
-        } else {
-          changeLane();
-        }
+      if (isLaneInAddingMode) {
+        dispatch("saveLane", {
+          value: isTemporaryLaneValid,
+        });
       } else {
+        changeLane();
+      }
+    } else {
       if (!isInputFocused) {
-        dispatch("exitAddLane", {value: isTemporaryLaneValid,})
+        dispatch("exitAddLane", { value: isTemporaryLaneValid });
       }
     }
   };
 
-  $: if (!isInputFocused) {trySaveLane()}
+  $: if (!isInputFocused) {
+    trySaveLane();
+  }
 
   /* UI */
 
@@ -77,13 +90,12 @@
     isLaneInEditMode = !isLaneInEditMode;
   };
 
-
   /* API */
 
   const addCard = async () => {
     if ($temporaryCard.isValid && $temporaryCard.card) {
       const newSwimlane = await trpc().cards.addCardToSwimlane.mutate({
-        boardId,
+        boardId: swimLaneInternal?.board_id ?? "",
         swimlaneId: swimLaneInternal?.id ?? "",
         card: $temporaryCard.card,
       });
@@ -107,6 +119,21 @@
       enterEditLaneMode();
     }
   };
+
+  function drop(ev: DragEvent) {
+    ev.preventDefault();
+    if (ev.dataTransfer) {
+      const json = ev.dataTransfer.getData("text/plain");
+      const data = JSON.parse(json);
+      console.log(data);
+    }
+  }
+
+  function allowDrop(ev: DragEvent) {
+    ev.preventDefault();
+  }
+
+  
 </script>
 
 <div
@@ -130,7 +157,7 @@
       <!-- <span class="block text-sm font-semibold">{swimLaneInternal?.title}</span> -->
       <span
         class="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold "
-        >{swimLaneInternal?.cards?.length}</span
+        >{swimLaneInternal?.cards?.size}</span
       >
       <button class="btn btn-icon w-6 h-6 rounded ml-auto btn-base">
         <i class="fa-solid fa-ellipsis-vertical" />
@@ -139,15 +166,28 @@
   </div>
 
   <!-- CARDS -->
-  <div class="flex flex-col pb-2 pr-1 overflow-y-scroll">
+  <div
+    class="flex flex-col pb-2 pr-1 overflow-y-scroll"
+    on:drop={drop}
+    on:dragover={allowDrop}
+  >
     {#if swimLaneInternal}
-      {#each swimLaneInternal?.cards as card}
-        <Card {card} />
+      {#each [...swimLaneInternal?.cards.values()] as card, cardIndex (card)}
+        <div
+        >
+        <!-- in:receive={{ key: cardIndex }}
+          out:send={{ key: cardIndex }}
+          animate:flip={{ duration: 500 }} -->
+          <Card {cardIndex} {laneIndex} {card} />
+        </div>
       {/each}
     {/if}
     {#if isCardBeingAdded}
-      <Card on:saveCard={addCard} isCardInEditMode={isCardBeingAdded} on:exitAddCard={enterAddCardMode}
-       />
+      <Card
+        on:saveCard={addCard}
+        isCardInEditMode={isCardBeingAdded}
+        on:exitAddCard={enterAddCardMode}
+      />
     {/if}
   </div>
 
@@ -181,65 +221,5 @@
   {/if}
 </div>
 
-<!-- {#if !isLaneBeingAdded}
-      <button
-        class="btn variant-filled-primary bg-primary-500 flex flex-grow text-sm h-6"
-        on:click={enterSwimlaneMode}
-      >
-        <span><i class="fa-solid fa-plus" /></span>
-        <span>Add another lane</span>
-      </button>
-    {:else}
-      <button
-        class="btn variant-filled-primary bg-primary-500 w-52 text-sm h-6"
-        on:click={addLane}
-      >
-        <span>Add lane</span>
-      </button>
-      <button
-        id="exitAdd"
-        class="btn-icon variant-filled-primary rounded ml-auto btn-base text-sm h-6"
-        on:click={enterSwimlaneMode}
-      >
-        <span><i class="fa-solid fa-xmark" /></span>
-      </button>
-    {/if} -->
 <style>
-  /* .dark.card {
-    --tw-ring-color: rgb(250 250 250 / 0.9) !important;
-  } */
-
-  /* .card {
-    --tw-ring-color: rgb(23 23 23 / 0.5);
-  } */
-
-  /* .dark .card {
-    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-    --tw-ring-inset: inset;
-    --tw-ring-color: rgb(250 250 250 / 0.9);
-} */
-
-  /* .list {
-    background-color: var(--ds-background-accent-gray-subtlest,#ebecf0);
-    border-radius: 3px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    max-height: 100%;
-    position: relative;
-    white-space: normal;
-    width: 100%!important;
-}
-
-.list-wrapper {
-    box-sizing: border-box;
-    display: inline-block;
-    height: 100%;
-    margin: 0 4px;
-    vertical-align: top;
-    white-space: nowrap;
-    width: 272px;
-} */
 </style>

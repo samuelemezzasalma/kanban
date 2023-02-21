@@ -5,6 +5,8 @@
   import { createEventDispatcher } from "svelte";
   import { z } from "zod";
   import Textarea from "./elements/Textarea.svelte";
+  import { flip } from "svelte/animate";
+  import { send, receive } from "../utils/transitions";
 
   const months = new Map([
     [0, `Jan`],
@@ -28,6 +30,7 @@
     title: "",
     description: "",
     tags: [],
+    lane_id: null,
     comments: [],
   };
 
@@ -37,11 +40,14 @@
 
   let isFocused: boolean = true;
 
+  export let cardIndex: number | undefined = undefined;
+  export let laneIndex: number | undefined = undefined;
+
   $: isTemporaryCardValid = z.string().min(1).safeParse(newTitle).success;
 
   $: $temporaryCard = {
     isValid: isTemporaryCardValid,
-    card: { id: card?.id, title: newTitle },
+    card: { id: card?.id, title: newTitle, lane_id: card?.lane_id ?? null },
   };
 
   const trySaveCard = () => {
@@ -51,15 +57,61 @@
       });
     } else {
       if (!isFocused) {
-        dispatch("exitAddCard", {value: isTemporaryCardValid,})
+        dispatch("exitAddCard", { value: isTemporaryCardValid });
       }
     }
   };
 
-  $: if (!isFocused) {trySaveCard()}
+  $: if (!isFocused) {
+    trySaveCard();
+  }
+
+  function drag(ev: any) {
+    if (ev.dataTransfer && ev.target) {
+      const data = {
+        laneIndex,
+        cardIndex,
+        lane_id: card?.lane_id,
+        id: card?.id,
+      };
+      console.log(ev);
+      console.log(data);
+
+      ev.dataTransfer.setData("text/plain", JSON.stringify(data));
+
+      // ev.target.classList.add("border");
+      // ev.target.classList.add("border-dashed");
+      // ev.target.classList.remove("card-hover");
+      // ev.target.classList.add("card-hidden");
+
+    }
+  }
+
+  function dragend(ev: any) {
+    // ev.target.classList.add("card-hover");
+    // ev.target.classList.remove("border");
+    // ev.target.classList.remove("border-dashed");
+    // ev.target.classList.remove("card-hidden");
+    // ev.target.classList.remove("opacity-0");
+  }
+
+  /* draggedElement.addEventListener("dragstart", function(event) {
+  // Hide the dragged element
+  draggedElement.style.opacity = "0";
+});
+
+draggedElement.addEventListener("dragend", function(event) {
+  // Show the dragged element
+  draggedElement.style.opacity = "1";
+}); */
 </script>
 
-<div class="card card-hover variant-soft cursor-pointer mt-3" draggable="true">
+<div
+  class="card card-hover variant-soft cursor-pointer mt-3"
+  draggable={!isCardInEditMode ? true : false}
+  on:dragstart={drag}
+  on:dragend={dragend}
+>
   <header class="card-header">
     {#if card?.tags && card?.tags.length > 0}
       <span class="chip variant-filled-primary">{card?.tags}</span>
