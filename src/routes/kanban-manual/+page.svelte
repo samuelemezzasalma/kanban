@@ -34,21 +34,15 @@
   let cardDragged: { laneIndex: number; cardIndex: number };
 
   function dragLaneStart(event: DragEvent, laneIndex: number) {
-    console.log("dragLaneStart");
     laneDragged = laneIndex;
-    const data = {laneDragged: laneIndex}
+    const data = { laneDragged: laneIndex };
     event.dataTransfer?.setData("text/plain", JSON.stringify(data));
   }
   function dropLane(event: DragEvent) {
-    console.log("dropLane")
     const json = event.dataTransfer?.getData("text/plain");
     if (json) {
       const data = JSON.parse(json);
-      console.log(data)
-      console.log(laneHoverDrag)
-      console.log([...Board])
       const [item] = Board.splice(data.laneDragged, 1);
-      console.log([...Board])
       if (typeof laneHoverDrag === "number") {
         if (laneHoverDrag <= data.laneDragged) {
           Board.splice(laneHoverDrag, 0, item);
@@ -59,7 +53,6 @@
         Board.push(item);
       }
     }
-    console.log([...Board])
     Board = [...Board];
     laneDragged = null;
     laneHoverDrag = null;
@@ -84,21 +77,15 @@
     if (json) {
       const data = JSON.parse(json);
       const [item] = Board[data.laneIndex].items.splice(data.cardIndex, 1);
-      console.log(`cardHover: ${cardHover}`);
-      console.log(`laneHover: ${laneHover}`)
-      console.log(`data.cardIndex: ${data.cardIndex}`)
-      console.log(`data.laneIndex: ${data.laneIndex}`)
-      console.log(laneHover === data.laneIndex)
       if (typeof cardHover === "number") {
         if (laneHover === data.laneIndex) {
-          console.log(`first`)
           if (cardHover <= data.cardIndex) {
-            Board[laneIndex].items.splice(cardHover, 0, item);  
+            Board[laneIndex].items.splice(cardHover, 0, item);
           } else {
-            Board[laneIndex].items.splice(cardHover  - 1, 0, item);
+            Board[laneIndex].items.splice(cardHover - 1, 0, item);
           }
         } else {
-          console.log(`second`)
+          console.log(cardHover)
           Board[laneIndex].items.splice(cardHover, 0, item);
         }
       } else {
@@ -110,6 +97,7 @@
     laneHover = null;
     cardHover = null;
   }
+
 </script>
 
 <!-- Component Start -->
@@ -120,16 +108,19 @@
     <h1 class="text-2xl font-bold">Team Project Board</h1>
   </div>
   <!-- BOARD -->
-  <!-- space-x-6 -->
-  <div class="flex grow px-10 mt-4 space-x-6 overflow-auto" on:drop={(event) => { if (cardHover === null) {dropLane(event)}}}
-    on:dragover|preventDefault={() => false}>
-    
-
+  <div
+    class="flex grow px-10 mt-4 space-x-6 overflow-auto"
+    on:drop={(event) => {
+      if (laneDragged !== null) {
+        dropLane(event);
+      }
+    }}
+    on:dragover|preventDefault={() => false}
+  >
     <!-- COLUMN -->
-    <!-- in:receive={{ key: laneIndex }} out:send={{ key: laneIndex }} -->
     {#each Board as lane, laneIndex (lane)}
       <div
-        style={laneHoverDrag !== null && laneIndex >= laneHoverDrag
+        style={laneHoverDrag !== null && (laneIndex >= laneHoverDrag)
           ? `transform: translateX(18rem); transition-duration: 300ms;`
           : `transform: translateX(0px);`}
         draggable={true}
@@ -148,46 +139,47 @@
         out:send={{ key: laneIndex }}
         animate:flip
       >
+      
+        <div
+          class="flex flex-row h-full w-3"
+          on:dragenter|preventDefault={() => {
+            if (laneDragged != null) {
+              laneHoverDrag = laneIndex;
+            }
+          }}
+        />
 
-      <div class="flex flex-row h-full w-3" on:dragenter|preventDefault={() => {
-        console.log("enter")
-        if (laneDragged != null) {
-          (laneHoverDrag = laneIndex)
-        };
-  }}></div>
-
-      <div class="flex flex-col w-full">
-        <!-- COLUMN TITLE -->
-        <div class="flex items-center flex-shrink-0 h-10 px-2">
-          <span class="block text-sm font-semibold">{lane.name}</span>
-          <span
-            class="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
-            >6</span
-          >
-          <button
-            class="flex items-center justify-center w-6 h-6 ml-auto text-indigo-500 rounded hover:bg-indigo-500 hover:text-indigo-100"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        <div class="flex flex-col w-full">
+          <!-- COLUMN TITLE -->
+          <div class="flex items-center flex-shrink-0 h-10 px-2 cursor-grab">
+            <span class="block text-sm font-semibold cursor-default">{lane.name}</span>
+            <span
+              class="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
+              >6</span
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-          </button>
-        </div>
-
+            <button
+              class="flex items-center justify-center w-6 h-6 ml-auto text-indigo-500 rounded hover:bg-indigo-500 hover:text-indigo-100 cursor-default"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+            </button>
+          </div>
           <!-- COLUMN CONTAINER -->
           <div
             class="flex flex-col grow pb-2 overflow-auto h-full"
             on:drop={(event) => {
-              if (cardHover !== null) {
+              if (cardDragged !== null) {
                 drop(event, laneIndex);
                 event.stopPropagation();
               }
@@ -198,9 +190,6 @@
               laneHover = null;
             }}
           >
-          {laneIndex}
-          {laneDragged}
-          {laneHoverDrag}
             <!-- CARD -->
             {#each lane.items as card, cardIndex (card)}
               <div
@@ -229,9 +218,10 @@
                 >
                   <div
                     class="flex w-full"
-                    on:dragenter|preventDefault={() => { if (cardDragged) {  
-                      cardHover = cardIndex; console.log(cardHover);
-                    }
+                    on:dragenter|preventDefault={() => {
+                      if (cardDragged) {
+                        cardHover = cardIndex;
+                      }
                     }}
                   >
                     <button
@@ -315,26 +305,16 @@
               </div>
             {/each}
           </div>
-      </div>
-      <div class="flex flex-row h-full w-3" on:dragleave={() => {
-        laneHoverDrag = null;console.log("leave")
-      }}></div>
-      
+        </div>
+        <div
+          class="flex flex-row h-full w-3"
+          on:dragleave={() => {
+            laneHoverDrag = null;
+          }}
+        />
       </div>
     {/each}
     <div class="flex-shrink-0 w-6" />
   </div>
 </div>
 <!-- Component End -->
-
-
-<!-- on:dragenter|preventDefault={() => {
-              if (laneDragged != null) {
-                (laneHoverDrag = laneIndex)
-              } else {laneHoverDrag = null};
-              console.log("enter")
-        }} -->
-
-        <!-- on:dragleave={() => {
-              laneHoverDrag = null;
-            }} -->
