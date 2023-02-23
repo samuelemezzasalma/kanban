@@ -31,7 +31,7 @@
   let laneHoverDrag: number | null = null;
 
   let laneDragged: number | null = null;
-  let cardDragged: { laneIndex: number; cardIndex: number };
+  let cardDragged: { laneIndex: number; cardIndex: number } | null;
 
   function dragLaneStart(event: DragEvent, laneIndex: number) {
     laneDragged = laneIndex;
@@ -92,7 +92,7 @@
         Board[laneIndex].items.push(item);
       }
     }
-
+    cardDragged = null;
     Board = Board;
     laneHover = null;
     cardHover = null;
@@ -205,7 +205,7 @@
                 animate:flip={{ duration: 500 }}
               >
                 <div
-                  class="flex flex-col items-start p-4 mt-3 bg-white rounded-lg cursor-pointer bg-opacity-90 group hover:bg-opacity-100"
+                  class="flex flex-col items-start p-4 mt-3  cursor-pointer"
                   draggable={true}
                   on:dragstart={(event) => {
                     dragStart(event, laneIndex, cardIndex);

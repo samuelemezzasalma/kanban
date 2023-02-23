@@ -36,8 +36,6 @@
 
   let newTitle: string = "";
 
-  export let isCardInEditMode: boolean = false;
-
   let isFocused: boolean = true;
 
   export let cardIndex: number | undefined = undefined;
@@ -65,94 +63,48 @@
   $: if (!isFocused) {
     trySaveCard();
   }
-
-  function drag(ev: any) {
-    if (ev.dataTransfer && ev.target) {
-      const data = {
-        laneIndex,
-        cardIndex,
-        lane_id: card?.lane_id,
-        id: card?.id,
-      };
-      console.log(ev);
-      console.log(data);
-
-      ev.dataTransfer.setData("text/plain", JSON.stringify(data));
-
-      // ev.target.classList.add("border");
-      // ev.target.classList.add("border-dashed");
-      // ev.target.classList.remove("card-hover");
-      // ev.target.classList.add("card-hidden");
-
-    }
-  }
-
-  function dragend(ev: any) {
-    // ev.target.classList.add("card-hover");
-    // ev.target.classList.remove("border");
-    // ev.target.classList.remove("border-dashed");
-    // ev.target.classList.remove("card-hidden");
-    // ev.target.classList.remove("opacity-0");
-  }
-
-  /* draggedElement.addEventListener("dragstart", function(event) {
-  // Hide the dragged element
-  draggedElement.style.opacity = "0";
-});
-
-draggedElement.addEventListener("dragend", function(event) {
-  // Show the dragged element
-  draggedElement.style.opacity = "1";
-}); */
 </script>
 
-<div
-  class="card card-hover variant-soft cursor-pointer mt-3"
-  draggable={!isCardInEditMode ? true : false}
-  on:dragstart={drag}
-  on:dragend={dragend}
->
-  <header class="card-header">
-    {#if card?.tags && card?.tags.length > 0}
-      <span class="chip variant-filled-primary">{card?.tags}</span>
-    {/if}
-  </header>
-  <div class="pt-2 pb-2 pr-4 pl-4">
-    {#if isCardInEditMode}
-      <Textarea
-        clazz={"mt-1 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"}
-        placeholder={"Enter a title for this card…"}
-        rows={3}
-        bind:value={newTitle}
-        bind:isFocused
-        on:onEnter={trySaveCard}
-      />
-    {:else}
-      <h4>{card?.title}</h4>
-    {/if}
-  </div>
-  <footer class="card-footer pb-4 pr-4 pl-4">
-    <div class="flex items-center w-full text-xs font-medium ">
-      <div class="flex items-center">
-        <i class="fa-solid fa-calendar" />
-        <span class="ml-1 leading-none"
-          >{`${new Date().getDate()} ${months.get(
-            new Date().getMonth()
-          )}`}</span
-        >
-      </div>
-      {#if card?.comments}
-        <div class="relative flex items-center ml-4">
-          <i class="fa-solid fa-comment" />
-          <span class="ml-1 leading-none">{card?.comments?.length}</span>
-        </div>
-      {/if}
-      <Avatar
-        width="w-10"
-        rounded="rounded-full"
-        class="ml-auto"
-        src="https://i.pravatar.cc/"
-      />
-    </div>
-  </footer>
+<header class="card-header">
+  {#if card?.tags && card?.tags.length > 0}
+    <span class="chip variant-filled-primary">{card?.tags}</span>
+  {/if}
+</header>
+<div class="pt-2 pb-2 pr-4 pl-4">
+  <!-- {#if isCardInEditMode}
+    <Textarea
+      clazz={"mt-1 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"}
+      placeholder={"Enter a title for this card…"}
+      rows={3}
+      bind:value={newTitle}
+      bind:isFocused
+      on:onEnter={trySaveCard}
+    />
+  {:else} -->
+    <h4>{card?.title}</h4>
+  <!-- {/if} -->
 </div>
+<footer class="card-footer pb-4 pr-4 pl-4">
+  <div class="flex items-center w-full text-xs font-medium ">
+    <div class="flex items-center">
+      <i class="fa-solid fa-calendar" />
+      <span class="ml-1 leading-none"
+        >{`${new Date().getDate()} ${months.get(
+          new Date().getMonth()
+        )}`}</span
+      >
+    </div>
+    {#if card?.comments}
+      <div class="relative flex items-center ml-4">
+        <i class="fa-solid fa-comment" />
+        <span class="ml-1 leading-none">{card?.comments?.length}</span>
+      </div>
+    {/if}
+    <Avatar
+      width="w-10"
+      rounded="rounded-full"
+      class="ml-auto"
+      src="https://i.pravatar.cc/"
+    />
+  </div>
+</footer>

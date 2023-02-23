@@ -3,7 +3,14 @@
   import { trpc, type Swimlane } from "$lib/trcp/client";
   import { createEventDispatcher } from "svelte";
   import { z } from "zod";
-  import { temporaryCard, temporaryLane } from "../stores";
+  import {
+    temporaryCard,
+    temporaryLane,
+    laneHoverDrag,
+    cardHover,
+    cardDragged,
+    laneDragged,
+  } from "../stores";
   import Card from "./Card.svelte";
   import Input from "./elements/Input.svelte";
   import { flip } from "svelte/animate";
@@ -28,8 +35,6 @@
 
   let isCardBeingAdded = false;
 
-  let swimlaneInternal: Swimlane = null;
-
   $: swimLaneInternal = swimlane;
 
   let newTitle: string = "";
@@ -38,7 +43,13 @@
 
   let isCardFocused: boolean = false;
 
-  export let laneIndex: number | undefined = undefined;
+  export let laneIndex: number | null;
+
+  let laneHover: number | null = null;
+
+  let draggedCardRect: DOMRect | undefined;
+
+  $: draggedCardHeight = draggedCardRect?.height ?? 0;
 
   /* REACTIVITY */
 
@@ -90,6 +101,54 @@
     isLaneInEditMode = !isLaneInEditMode;
   };
 
+  function dropCard(event: DragEvent, laneIndex: number) {
+    event.preventDefault();
+    const json = event.dataTransfer?.getData("text/plain");
+    if (json) {
+      const data = JSON.parse(json);
+      if (swimLaneInternal && swimLaneInternal?.cards) {
+        let cards = [...swimLaneInternal?.cards?.values()];
+        const [item] = cards.splice(data.cardIndex, 1);
+      if (typeof cardHover === "number") {
+        if (laneHover === data.laneIndex) {
+          if (cardHover <= data.cardIndex) {
+            
+            Board[laneIndex].items.splice(cardHover, 0, item);
+          } else {
+            Board[laneIndex].items.splice(cardHover - 1, 0, item);
+          }
+        } else {
+          console.log(cardHover);
+          Board[laneIndex].items.splice(cardHover, 0, item);
+        }
+      }
+      
+      
+      } else {
+        Board[laneIndex].items.push(item);
+      }
+      Board = Board;
+    }
+    cardDragged.set(null);
+    laneHover = null;
+    cardHover.set(null);
+  }
+
+  function startCardDrag(
+    event: DragEvent,
+    laneIndex: number,
+    cardIndex: number
+  ) {
+    const draggedElement = document.getElementById(
+      `card-${laneIndex}-${cardIndex}`
+    );
+    if (draggedElement) {
+      draggedCardRect = draggedElement?.getBoundingClientRect();
+      cardDragged.set({ laneIndex, cardIndex });
+      event.dataTransfer?.setData("text/plain", JSON.stringify(cardDragged));
+    }
+  }
+
   /* API */
 
   const addCard = async () => {
@@ -120,27 +179,25 @@
     }
   };
 
-  function drop(ev: DragEvent) {
-    ev.preventDefault();
-    if (ev.dataTransfer) {
-      const json = ev.dataTransfer.getData("text/plain");
-      const data = JSON.parse(json);
-      console.log(data);
-    }
-  }
-
   function allowDrop(ev: DragEvent) {
     ev.preventDefault();
   }
-
-  
 </script>
+
+<div
+  class="flex flex-row h-full w-3"
+  on:dragenter|preventDefault={() => {
+    if ($laneDragged != null) {
+      laneHoverDrag.set(laneIndex);
+    }
+  }}
+/>
 
 <div
   class="flex flex-col !w-full !max-h-full relative card !bg-transparent p-2 "
 >
-  <!-- HEADER -->
-  <div class="flex items-center flex-shrink-0 h-10 px-2">
+  <!-- LANE TITLE -->
+  <div class="flex items-center flex-shrink-0 h-10 px-2 cursor-grab">
     {#if isLaneInAddingMode || isLaneInEditMode}
       <Input
         clazz={"input"}
@@ -165,30 +222,59 @@
     {/if}
   </div>
 
-  <!-- CARDS -->
+  <!-- COLUMN CONTAINER -->
   <div
-    class="flex flex-col pb-2 pr-1 overflow-y-scroll"
-    on:drop={drop}
-    on:dragover={allowDrop}
+    class="flex flex-col grow pb-2 pr-1 overflow-y-scroll"
+    on:drop={(event) => {
+      if (cardDragged !== null && laneIndex !== null) {
+        dropCard(event, laneIndex);
+        event.stopPropagation();
+      }
+    }}
+    on:dragover|preventDefault={() => false}
+    on:dragenter|preventDefault={() => (laneHover = laneIndex)}
+    on:dragend={() => {
+      laneHover = null;
+    }}
   >
-    {#if swimLaneInternal}
+    <!-- CARDS -->
+    {#if swimLaneInternal && laneIndex !== null}
       {#each [...swimLaneInternal?.cards.values()] as card, cardIndex (card)}
         <div
-        >
-        <!-- in:receive={{ key: cardIndex }}
+          id={`card-${laneIndex}-${cardIndex}`}
+          class="card"
+          style={$cardHover !== null &&
+          laneIndex === $laneHover &&
+          cardIndex >= $cardHover
+            ? `transform: translateY(${draggedCardHeight}px)`
+            : `transform: translateY(0px)`}
+          in:receive={{ key: cardIndex }}
           out:send={{ key: cardIndex }}
-          animate:flip={{ duration: 500 }} -->
-          <Card {cardIndex} {laneIndex} {card} />
+          animate:flip={{ duration: 500 }}
+        >
+          <div
+            class="card card-hover variant-soft cursor-pointer mt-3"
+            draggable={true}
+            on:dragstart={(event) => {
+              startCardDrag(event, laneIndex, cardIndex);
+              event.stopPropagation();
+            }}
+            on:dragover|preventDefault={() => false}
+            on:dragend={() => {
+              cardHover.set(null);
+            }}
+          >
+            <Card {cardIndex} {laneIndex} {card} />
+          </div>
         </div>
       {/each}
     {/if}
-    {#if isCardBeingAdded}
+    <!-- {#if isCardBeingAdded}
       <Card
         on:saveCard={addCard}
-        isCardInEditMode={isCardBeingAdded}
         on:exitAddCard={enterAddCardMode}
       />
-    {/if}
+    {/if} -->
   </div>
 
   <!-- BUTTONS -->
