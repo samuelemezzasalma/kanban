@@ -1,8 +1,4 @@
 <script lang="ts">
-  import type { CardData } from "$lib/models";
-  import { trpc, type Swimlane } from "$lib/trcp/client";
-  import { createEventDispatcher } from "svelte";
-  import { z } from "zod";
   import {
     temporaryCard,
     temporaryLane,
@@ -10,7 +6,12 @@
     cardHover,
     cardDragged,
     laneDragged,
+    board,
+    lanes,
   } from "../stores";
+  import { trpc, type Swimlane, type Card as ClientCard } from "$lib/trcp/client";
+  import { createEventDispatcher } from "svelte";
+  import { z } from "zod";
   import Card from "./Card.svelte";
   import Input from "./elements/Input.svelte";
   import { flip } from "svelte/animate";
@@ -18,13 +19,13 @@
 
   /* INITIALIZING */
 
-  export let boardId: string = "";
+  let boardId: string = $board?.id ?? "";
 
-  export let swimlane: Swimlane = {
+  let swimlane: Swimlane = {
     id: "",
     title: "",
-    cards: new Map<string, CardData>(),
-    board_id: null,
+    cards: new Array<ClientCard>(),
+    board_id: "",
   };
 
   const dispatch = createEventDispatcher();
@@ -35,15 +36,29 @@
 
   let isCardBeingAdded = false;
 
-  $: swimLaneInternal = swimlane;
-
   let newTitle: string = "";
 
   let isInputFocused: boolean = false;
 
   let isCardFocused: boolean = false;
 
-  export let laneIndex: number | null;
+  export let laneIndex: number;
+
+  export let laneId: string;
+
+  $: swimLaneInternal =
+    $lanes?.find((lane) => lane.order === laneIndex) ?? swimlane;
+
+  let cardsOrdered = [];
+
+  swimLaneInternal?.cards.map((card) => {
+    cardsOrdered[card.order] = card;
+  });
+
+  $: cards = swimLaneInternal?.cards.reduce((sorted, el) => {
+    sorted[el.order] = el
+    return sorted;
+  }, new Array<ClientCard>());
 
   let laneHover: number | null = null;
 
@@ -60,10 +75,11 @@
     lane: {
       id: swimLaneInternal?.id ?? "",
       title: newTitle,
-      board_id: swimLaneInternal?.board_id ?? null,
+      board_id: swimLaneInternal?.board_id ?? "",
+      order: 0,
       cards: swimLaneInternal?.cards
-        ? new Map([...swimLaneInternal?.cards])
-        : new Map<string, CardData>(),
+        ? swimLaneInternal?.cards
+        : new Array<CardData>(),
     },
   };
 
@@ -104,7 +120,7 @@
   function dropCard(event: DragEvent, laneIndex: number) {
     event.preventDefault();
     const json = event.dataTransfer?.getData("text/plain");
-    if (json) {
+    /* if (json) {
       const data = JSON.parse(json);
       if (swimLaneInternal && swimLaneInternal?.cards) {
         let cards = [...swimLaneInternal?.cards?.values()];
@@ -128,7 +144,7 @@
         Board[laneIndex].items.push(item);
       }
       Board = Board;
-    }
+    } */
     cardDragged.set(null);
     laneHover = null;
     cardHover.set(null);
@@ -136,6 +152,7 @@
 
   function startCardDrag(
     event: DragEvent,
+    idCard: string,
     laneIndex: number,
     cardIndex: number
   ) {
@@ -144,7 +161,7 @@
     );
     if (draggedElement) {
       draggedCardRect = draggedElement?.getBoundingClientRect();
-      cardDragged.set({ laneIndex, cardIndex });
+      cardDragged.set({ idCard, laneIndex, cardIndex });
       event.dataTransfer?.setData("text/plain", JSON.stringify(cardDragged));
     }
   }
@@ -214,7 +231,7 @@
       <!-- <span class="block text-sm font-semibold">{swimLaneInternal?.title}</span> -->
       <span
         class="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold "
-        >{swimLaneInternal?.cards?.size}</span
+        >{swimLaneInternal?.cards?.length}</span
       >
       <button class="btn btn-icon w-6 h-6 rounded ml-auto btn-base">
         <i class="fa-solid fa-ellipsis-vertical" />
@@ -239,7 +256,7 @@
   >
     <!-- CARDS -->
     {#if swimLaneInternal && laneIndex !== null}
-      {#each [...swimLaneInternal?.cards.values()] as card, cardIndex (card)}
+      {#each cards as card, cardIndex (card)}
         <div
           id={`card-${laneIndex}-${cardIndex}`}
           class="card"
@@ -256,7 +273,7 @@
             class="card card-hover variant-soft cursor-pointer mt-3"
             draggable={true}
             on:dragstart={(event) => {
-              startCardDrag(event, laneIndex, cardIndex);
+              startCardDrag(event, card.id, laneIndex, cardIndex);
               event.stopPropagation();
             }}
             on:dragover|preventDefault={() => false}

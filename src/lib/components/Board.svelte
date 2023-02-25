@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cardHover, temporaryLane } from "$lib/stores";
+  import { board, cardHover, temporaryLane, lanes } from "$lib/stores";
   import { trpc, type Board } from "$lib/trcp/client";
   import { laneDragged, laneHoverDrag } from "../stores";
   import Swimlane from "./Swimlane.svelte";
@@ -7,10 +7,6 @@
   import { send, receive } from "../utils/transitions";
 
   /* INITIALIZING */
-
-  export let board: Board | undefined;
-
-  $: boardInternal = board;
 
   let isLaneBeingAdded = false;
 
@@ -24,8 +20,8 @@
     const json = event.dataTransfer?.getData("text/plain");
     if (json) {
       const data = JSON.parse(json);
-      if (boardInternal && boardInternal?.swimlanes) {
-        let lanes = [...boardInternal?.swimlanes?.values()];
+      if ($board && $board?.swimlanes) {
+        let lanes = [...$board?.swimlanes?.values()];
         const [item] = lanes.splice(data.laneDragged, 1);
         if (typeof laneHoverDrag === "number") {
           if (laneHoverDrag <= data.laneDragged) {
@@ -43,7 +39,7 @@
           }
         });
         if (lanesInMap !== null && lanesInMap !== undefined) {
-          boardInternal.swimlanes = lanesInMap;
+          $board.swimlanes = lanesInMap;
         }
       }
     }
@@ -61,18 +57,18 @@
 
   const addLane = async () => {
     if ($temporaryLane.isValid && $temporaryLane.lane) {
-      if (board && board.id && board.id !== null) {
+      if ($board !== null && $board.id && $board.id !== null) {
         const newBoard = await trpc().lanes.addLaneToBoard.mutate({
-          boardId: board?.id,
+          boardId: $board?.id,
           lane: $temporaryLane.lane,
         });
         if (
           newBoard !== undefined &&
           newBoard !== null &&
-          boardInternal?.swimlanes
+          $board?.swimlanes
         ) {
           console.log(newBoard);
-          boardInternal = newBoard;
+          board.set(newBoard);
         }
         enterSwimlaneMode();
       }
@@ -83,7 +79,7 @@
 <div class="flex flex-col w-screen h-screen overflow-auto">
   <div class="px-10 mt-2">
     <button class="btn variant-filled-primary">
-      {boardInternal?.title}
+      {$board?.title}
     </button>
 
     <!-- <h2 class="text-l font-bold">{data?.board.title}</h2> -->
@@ -97,8 +93,8 @@
     }}
     on:dragover|preventDefault={() => false}
   >
-    {#if boardInternal?.swimlanes}
-      {#each [...boardInternal?.swimlanes.values()] as swimlane, laneIndex (swimlane)}
+    {#if $lanes}
+      {#each [...$lanes.values()] as swimlane, laneIndex (swimlane)}
         <!-- class="flex flex-row shrink-0 w-72" -->
         <div
           style={$laneHoverDrag !== null && laneIndex >= $laneHoverDrag
@@ -120,24 +116,25 @@
           animate:flip
           class="box-border inline-block h-full align-top whitespace-no-wrap w-72"
         >
-          <Swimlane {laneIndex} boardId={boardInternal?.id ?? ""} {swimlane} />
+        <!-- boardId={$board?.id ?? ""} {swimlane} -->
+          <Swimlane {laneIndex} laneId={swimlane.id}  />
         </div>
       {/each}
     {/if}
     {#if isLaneBeingAdded}
     <!-- TODO Settare correttamente laneIndex -->
-      <Swimlane
+      <!-- <Swimlane
         laneIndex={0}
         isLaneInAddingMode={isLaneBeingAdded}
-        boardId={boardInternal?.id ?? ""}
+        boardId={$board?.id ?? ""}
         swimlane={{
           title: "",
           cards: new Map([]),
-          board_id: boardInternal?.id ?? null,
+          board_id: $board?.id ?? null,
         }}
         on:saveLane={addLane}
         on:exitAddLane={enterSwimlaneMode}
-      />
+      /> -->
       <!-- <div class="flex items-center flex-shrink- h-10 px-2">
         <button
           class="btn variant-filled-primary bg-primary-500 w-52 text-sm h-6"

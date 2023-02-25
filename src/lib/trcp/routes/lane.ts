@@ -1,56 +1,49 @@
-import { swimlaneZod, type Board, type SwimLane } from "$lib/models";
-import { findById } from "$lib/utils/general";
+import { swimlaneZod } from "$lib/models";
+import prisma from "$lib/utils/prisma";
+import type { Prisma, Swimlane } from "@prisma/client";
 import { z } from "zod";
-import { boards } from "../data";
 import { t } from "../t";
 
 const router = t.router;
 const publicProcedure = t.procedure;
 
 export const laneRouter = router({
-  swimlaneById: publicProcedure
-    .input(z.object({ boardId: z.string(), swimlaneId: z.string().min(1) }))
-    .query(({ input }) => {
-      const { boardId, swimlaneId } = { ...input }
-      let swimlane: SwimLane | undefined;
-      const board = findById<Board>(boards, boardId);
-      if (board) {
-        swimlane = board.swimlanes.has(swimlaneId)? board.swimlanes.get(swimlaneId): undefined;
-        // swimlane = findById<SwimLane>(board.swimlanes, input.swimlaneId)
-      }
-      return swimlane? {...swimlane} : null;
-    }),
-    addLaneToBoard: publicProcedure
-    .input(z.object({ boardId: z.string(), lane: swimlaneZod }))
-    .mutation(({ input }) => {
+  create: publicProcedure
+    .input(z.object({ boardId: z.number(), lane: swimlaneZod }))
+    .mutation(async ({ input }) => {
       const { boardId, lane } = { ...input }
-      let newLane: SwimLane | null = null;
-      const board = findById<Board>(boards, boardId);
-      if (board) {
-        const id = `${Math.random()}`;
-        newLane = {
-          ...lane,
-          board_id: board.id?? null,
-          id,
-        };
-        board.swimlanes.set(id, newLane)
+      const swimLaneInput: Prisma.SwimlaneCreateInput = {
+        title: lane.title,
+        positioning: lane.order,
+        boardId: { connect: { id: boardId } }
       }
-      return {...board};
+      const swimLane: Swimlane | null = await prisma.swimlane.create({ data: swimLaneInput })
+      return swimLane;
     }),
-    editLane: publicProcedure
-    .input(z.object({ boardId: z.string(), swimlaneId : z.string().min(1), title: z.string().min(1) }))
-    .mutation(({ input }) => {
-      const { boardId, swimlaneId, title } = { ...input }
-      let swimlane: SwimLane | null | undefined = null;
-      const board = findById<Board>(boards, boardId);
-      if (board?.swimlanes && board?.swimlanes !== null) {
-        swimlane = board.swimlanes.has(swimlaneId)? board.swimlanes.get(swimlaneId): undefined;
-        // swimlane = findById<SwimLane>(board?.swimlanes, swimlaneId)
-        if (swimlane && title) {
-          swimlane.title = title
-          // board.swimlanes = [...board.swimlanes, {...swimlane, title}]
-        }
-      }
-      return swimlane
+  read: publicProcedure
+    .input(z.object({ swimlaneId: z.number() }))
+    .query(async ({ input }) => {
+      const { swimlaneId } = { ...input }
+      const lane: Swimlane | null = await prisma.swimlane.findUnique({ where: { id: swimlaneId } })
+      return lane;
+    }),
+  update: publicProcedure
+    .input(z.object({ swimlaneId: z.number(), title: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const { swimlaneId, title } = { ...input }
+      const lane: Swimlane | null = await prisma.swimlane.update({
+        where: { id: swimlaneId },
+        data: { title: title }
+      })
+      return lane;
+    }),
+  delete: publicProcedure
+    .input(z.object({ swimlaneId: z.number() }))
+    .mutation(async ({ input }) => {
+      const { swimlaneId } = { ...input }
+      const lane: Swimlane = await prisma.swimlane.delete({
+        where: { id: swimlaneId }
+      })
+      return lane;
     })
-  })
+})

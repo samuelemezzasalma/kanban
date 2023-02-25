@@ -1,11 +1,16 @@
-import { writable, type Writable } from 'svelte/store';
+import { derived, writable, type Writable } from 'svelte/store';
 import type { CardData } from './models';
-import type { Card, Swimlane } from './trcp/client';
+import type { Board, Card, Swimlane } from './trcp/client';
 
 
-export const temporaryCard = writable<{isValid: boolean, card: Card}>({isValid: false, card: {title: "", lane_id: null}});
+export const board = writable<Board | null>(null)
 
-export const temporaryLane = writable<{isValid: boolean, lane: Swimlane}>({isValid: false, lane: {title: "", board_id: null, cards: new Map<string, CardData>()}});
+export const lanes = derived(board, ($board) => $board?.swimlanes)
+
+
+export const temporaryCard = writable<{isValid: boolean, card: Card}>({isValid: false, card: {id: "", title: "", lane_id: "", order: 0}});
+
+export const temporaryLane = writable<{isValid: boolean, lane: Swimlane}>({isValid: false, lane: {id: "", title: "", board_id: "", order: 0, cards: new Array<CardData>()}});
 
 export const cardHover: Writable<number | null> = writable<number | null>(null);
 
@@ -13,7 +18,7 @@ export const laneHoverDrag: Writable<number | null> = writable<number | null>(nu
 
 export const laneDragged: Writable<number | null> = writable<number | null>(null);
 
-export const cardDragged: Writable<{ laneIndex: number; cardIndex: number } | null> = writable<{ laneIndex: number; cardIndex: number } | null>(null);
+export const cardDragged: Writable<{ idCard: string, laneIndex: number; cardIndex: number } | null> = writable<{ idCard: string, laneIndex: number; cardIndex: number } | null>(null);
 
 
 /* 

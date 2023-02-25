@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Attachment {
+  id      BigInt  @id @default(autoincrement())
+  card    BigInt
+  comment BigInt
+  Card    Card    @relation(fields: [card], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Comment Comment @relation(fields: [comment], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Author {
+  id         BigInt       @id @default(autoincrement())
+  name       String
+  surname    String
+  authorTeams AuthorTeam[]
+  cards       Card[]
+  comments    Comment[]
+}
+
+model AuthorTeam {
+  id     BigInt @id @default(autoincrement())
+  author BigInt
+  team   BigInt
+  authorId Author @relation(fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teamId   Team   @relation(fields: [team], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Board {
+  id       BigInt     @id @default(autoincrement())
+  team     BigInt
+  title    String
+  teamId     Team       @relation(fields: [team], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  swimlanes Swimlane[]
+}
+
+model Card {
+  id          BigInt       @id @default(autoincrement())
+  title       String
+  description String?
+  author      BigInt
+  swimlane    BigInt
+  positioning Int
+  attachments  Attachment[]
+  authorId      Author       @relation(fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  swimlaneId    Swimlane     @relation(fields: [swimlane], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comments     Comment[]
+}
+
+model Comment {
+  id         BigInt       @id @default(autoincrement())
+  author     BigInt
+  card       BigInt
+  text       String
+  attachments Attachment[]
+  authorId     Author       @relation(fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cardId       Card         @relation(fields: [card], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Swimlane {
+  id          BigInt @id @default(autoincrement())
+  board       BigInt
+  positioning Int
+  title       String
+  cards        Card[]
+  boardId       Board  @relation(fields: [board], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Team {
+  id         BigInt       @id @default(autoincrement())
+  name       String
+  authorTeams AuthorTeam[]
+  boards      Board[]
+}
