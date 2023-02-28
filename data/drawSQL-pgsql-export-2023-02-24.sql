@@ -72,14 +72,14 @@ CREATE TABLE "Attachment"(
 
 /* INSERT */
 
-/* INSERT INTO team (name) VALUES ('my team');
+/* INSERT INTO "Team"  (name) VALUES ('my team');
 
-INSERT INTO kanban_user (name, surname) VALUES ('sam', 'halfcorpse');
+insert into	"Author" (name, surname) values ('sam', 'halfcorpse')
 
-INSERT INTO kanban_user_team (id, kanban_user, team) VALUES (1, 1);
+INSERT INTO "AuthorTeam"  (author, team) VALUES (1, 1);
 
-INSERT INTO board (id, team, title) VALUES (1, 1, 'My Kanban');
+INSERT INTO "Board"  (team, title) VALUES (1, 'My Kanban');
 
-INSERT INTO swimlane (id, board, positioning, title) VALUES (1, 1, 1, 'my Lane'); 
-    
-INSERT INTO card (id,title,description,kanban_user,swimlane,positioning) VALUES (1, 'Card title', 'desc',1,1,1); */
+INSERT INTO "Swimlane"  (board, positioning, title) VALUES (1, 0, 'my Lane'); 
+
+INSERT INTO "Card"  (title, description, author, swimlane, positioning) VALUES ('Card title', 'desc', 1, 1, 0); */
