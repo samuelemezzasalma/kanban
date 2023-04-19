@@ -1,22 +1,41 @@
 version: "3.9"
 
 services:
-  client:
-    build:
-      context: ./
-    volumes:
-      - ./src:/home/node/app/src
-      - ./static:/home/node/app/static
-      - ./vite.config.js:/home/node/app/vite.config.js
-      - ./tsconfig.json:/home/node/app/tsconfig.json
-      - ./svelte.config.js:/home/node/app/svelte.config.js
-      - ./tests:/home/node/app/tests
-      - ./playwright.config.ts:/home/node/app/playwright.config.ts
-      # - /home/node/app/node_modules
-      # - .:/home/node/app
+
+  mongodb:
     ports:
-      - "5173:5173"
-    command: npm run dev
+      - "27017:27017"
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: sam
+      MONGO_INITDB_ROOT_PASSWORD: password
+    # volumes:
+    #   - "mongodb-data:/data/db"
+
+  # client:
+  #   build:
+  #     context: ./
+  #   volumes:
+  #     - ./src:/home/node/app/src
+  #     - ./static:/home/node/app/static
+  #     - ./vite.config.js:/home/node/app/vite.config.js
+  #     - ./tsconfig.json:/home/node/app/tsconfig.json
+  #     - ./svelte.config.js:/home/node/app/svelte.config.js
+  #     - ./tests:/home/node/app/tests
+  #     - ./playwright.config.ts:/home/node/app/playwright.config.ts
+  #     # - /home/node/app/node_modules
+  #     # - .:/home/node/app
+  #   ports:
+  #     - "5172:5173"
+  #   depends_on:
+  #     - mongodb
+  #   links:
+  #     - mongodb
+  #   command: npm run dev
+
+# volumes:
+#   mongodb-data: {}
+    
     # command: sh -c "npm install && npm run dev"
     # environment:
     #   - PORT=5173

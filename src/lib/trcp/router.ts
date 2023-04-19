@@ -3,6 +3,7 @@ import { boardRouter } from './routes/board';
 import { cardRouter } from './routes/card';
 import { laneRouter } from './routes/lane';
 import { t } from "./t";
+import transformer from '$lib/utils/trpc';
 
 const router = t.router;
 

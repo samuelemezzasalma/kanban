@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { trpc, type Swimlane } from "$lib/trcp/client";
+    import type { ISwimlane } from "$lib/mongoose/documents";
+  import { trpc } from "$lib/trcp/client";
   import { createEventDispatcher } from "svelte";
   import { z } from "zod";
   import { temporaryCard, temporaryLane } from "../stores";
@@ -10,11 +11,7 @@
 
   export let boardId: string = "";
 
-  export let swimlane: Swimlane = {
-    id: "",
-    title: "",
-    cards: [],
-  };
+  export let swimlane: ISwimlane;
 
   const dispatch = createEventDispatcher();
 
@@ -29,7 +26,7 @@
   let newTitle: string = "";
 
   let isInputFocused: boolean = false;
-  
+
   let isCardFocused: boolean = false;
 
   /* REACTIVITY */
@@ -45,27 +42,29 @@
     },
   };
 
-  // $: isLaneInEditMode = isInputFocused; 
+  // $: isLaneInEditMode = isInputFocused;
 
   /* VALIDATIONS */
 
   const trySaveLane = () => {
     if (isTemporaryLaneValid) {
-        if (isLaneInAddingMode) {
-          dispatch("saveLane", {
-            value: isTemporaryLaneValid,
-          });
-        } else {
-          changeLane();
-        }
+      if (isLaneInAddingMode) {
+        dispatch("saveLane", {
+          value: isTemporaryLaneValid,
+        });
       } else {
+        changeLane();
+      }
+    } else {
       if (!isInputFocused) {
-        dispatch("exitAddLane", {value: isTemporaryLaneValid,})
+        dispatch("exitAddLane", { value: isTemporaryLaneValid });
       }
     }
   };
 
-  $: if (!isInputFocused) {trySaveLane()}
+  $: if (!isInputFocused) {
+    trySaveLane();
+  }
 
   /* UI */
 
@@ -76,7 +75,6 @@
   const enterEditLaneMode = () => {
     isLaneInEditMode = !isLaneInEditMode;
   };
-
 
   /* API */
 
@@ -140,14 +138,17 @@
 
   <!-- CARDS -->
   <div class="flex flex-col pb-2 pr-1 overflow-y-scroll">
-    {#if swimLaneInternal}
-      {#each swimLaneInternal?.cards as card}
+    {#if swimLaneInternal && swimLaneInternal.cards}
+      {#each swimLaneInternal.cards as card}
         <Card {card} />
       {/each}
     {/if}
     {#if isCardBeingAdded}
-      <Card on:saveCard={addCard} isCardInEditMode={isCardBeingAdded} on:exitAddCard={enterAddCardMode}
-       />
+      <Card
+        on:saveCard={addCard}
+        isCardInEditMode={isCardBeingAdded}
+        on:exitAddCard={enterAddCardMode}
+      />
     {/if}
   </div>
 

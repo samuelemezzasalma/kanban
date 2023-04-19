@@ -1,9 +1,10 @@
 <script lang="ts">
+  import type { IBoard } from "$lib/mongoose/documents";
   import { temporaryLane } from "$lib/stores";
-  import { trpc, type Board } from "$lib/trcp/client";
+  import { trpc } from "$lib/trcp/client";
   import Swimlane from "./Swimlane.svelte";
 
-  export let board: Board | undefined;
+  export let board: IBoard | undefined | null;
 
   $: boardInternal = board;
 
@@ -25,7 +26,7 @@
           newBoard !== null &&
           boardInternal?.swimlanes
         ) {
-          console.log(newBoard)
+          console.log(newBoard);
           boardInternal = newBoard;
         }
         enterSwimlaneMode();
@@ -67,7 +68,7 @@
           <button
             class="btn variant-filled-primary bg-primary-500 w-52 text-sm h-6"
             on:click={addLane}
-          >
+          > 
             <span>Add a lane</span>
           </button>
           <button

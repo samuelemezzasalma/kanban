@@ -1,4 +1,7 @@
 import { cardZod, type Board, type CardData, type SwimLane } from "$lib/models";
+import type { iCard, ISwimlane } from "$lib/mongoose/documents";
+import { conn } from "$lib/mongoose/models";
+import { cardSchema, swimlaneSchema } from "$lib/mongoose/schemas";
 import { findById } from "$lib/utils/general";
 import { z } from "zod";
 import { boards } from "../data";
@@ -22,28 +25,17 @@ export const cardRouter = router({
       return card? {...card} : null;
     }),
     addCardToSwimlane: publicProcedure
-    .input(z.object({ boardId: z.string(), swimlaneId: z.string(), card: cardZod }))
-    .mutation(({ input }) => {
+    .input(z.object({ swimlaneId: z.string(), card: cardZod }))
+    .mutation(async ({ input }) => {
       // eslint-disable-next-line prefer-const
-      let { boardId, swimlaneId, card } = { ...input }
-      const board = findById<Board>(boards, boardId);
-      let swimlane: SwimLane | null = null;
-      if (board) {
-        swimlane = findById<SwimLane>(board.swimlanes, swimlaneId)
-        if (swimlane) {
-          const id = `${Math.random()}`;
-          const newCard: CardData = {
-            ...card,
-            id,
-          };
-          swimlane.cards = [...swimlane.cards, newCard]
+      let { swimlaneId, card } = { ...input }
 
-        } else {
-          throw new Error("Swimlane not found");
-        }
-      } else {
-        throw new Error("Board not found");
-      }
-      return {...swimlane};
+      const SwimlaneModel = conn.model('Swimlane', swimlaneSchema);
+      const swimlane = await SwimlaneModel.findById(swimlaneId)
+      swimlane?.cards?.push(card)
+      const savedSwinlane = await swimlane?.save()
+      const serializedData = JSON.stringify(savedSwinlane);
+      
+      return { data: serializedData };
     }),
   })

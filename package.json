@@ -38,8 +38,11 @@
 	"dependencies": {
 		"@trpc/client": "^10.9.0",
 		"@trpc/server": "^10.9.0",
+		"devalue": "^4.3.0",
+		"mongodb": "^5.1.0",
+		"mongoose": "^7.0.1",
 		"superjson": "^1.12.2",
-		"trpc-sveltekit": "^3.2.5",
+		"trpc-sveltekit": "^3.5.3",
 		"zod": "^3.20.2"
 	}
 }

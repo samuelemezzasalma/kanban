@@ -1,7 +1,6 @@
 <script lang="ts">
+  import type { iCard } from "$lib/mongoose/documents";
   import { temporaryCard } from "$lib/stores";
-  import type { Card } from "$lib/trcp/client";
-  import { Avatar } from "@skeletonlabs/skeleton";
   import { createEventDispatcher } from "svelte";
   import { z } from "zod";
   import Textarea from "./elements/Textarea.svelte";
@@ -23,13 +22,7 @@
 
   const dispatch = createEventDispatcher();
 
-  export let card: Card = {
-    id: "",
-    title: "",
-    description: "",
-    tags: [],
-    comments: [],
-  };
+  export let card: iCard;
 
   let newTitle: string = "";
 
@@ -51,12 +44,14 @@
       });
     } else {
       if (!isFocused) {
-        dispatch("exitAddCard", {value: isTemporaryCardValid,})
+        dispatch("exitAddCard", { value: isTemporaryCardValid });
       }
     }
   };
 
-  $: if (!isFocused) {trySaveCard()}
+  $: if (!isFocused) {
+    trySaveCard();
+  }
 </script>
 
 <div class="card card-hover variant-soft cursor-pointer mt-3" draggable="true">
@@ -95,12 +90,12 @@
           <span class="ml-1 leading-none">{card?.comments?.length}</span>
         </div>
       {/if}
-      <Avatar
+      <!-- <Avatar
         width="w-10"
         rounded="rounded-full"
         class="ml-auto"
         src="https://i.pravatar.cc/"
-      />
+      /> -->
     </div>
   </footer>
 </div>
